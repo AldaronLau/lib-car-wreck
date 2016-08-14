@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "lib-car-wreck/car.h"
+#include <car.h>
 
 int main(int argc, char **argv) {
 	car_camera_t camera;
