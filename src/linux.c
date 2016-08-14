@@ -36,7 +36,7 @@ static int xioctl(int fh, int request, void *arg)
 
 	do {
 		r = ioctl(fh, request, arg);
-	} while (-1 == r && EINTR == errno);
+	} while (r == -1 && EINTR == errno);
 
 	return r;
 }
@@ -49,7 +49,7 @@ static inline uint8_t read_frame(void* output) {
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
 
-	if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
+	if (xioctl(fd, VIDIOC_DQBUF, &buf) == -1) {
 		if(errno == EAGAIN) {
 			return 0;
 		}else{
@@ -65,7 +65,7 @@ static inline uint8_t read_frame(void* output) {
 
 	memcpy(output, buffers[buf.index].start, buf.bytesused);
 
-	if (-1 == xioctl(fd, VIDIOC_QBUF, &buf)) {
+	if (xioctl(fd, VIDIOC_QBUF, &buf) == -1) {
 		ERROR("VIDIOC_QBUF");
 		return 2;
 	}
@@ -77,7 +77,7 @@ static uint8_t stop_capturing(void) {
 	enum v4l2_buf_type type;
 
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	if (-1 == xioctl(fd, VIDIOC_STREAMOFF, &type)) {
+	if (xioctl(fd, VIDIOC_STREAMOFF, &type) == -1) {
 		ERROR("VIDIOC_STREAMOFF");
 		return 1;
 	}
@@ -113,7 +113,7 @@ static uint8_t uninit_device(void) {
 	unsigned int i;
 
 	for (i = 0; i < n_buffers; ++i) {
-		if (-1 == munmap(buffers[i].start, buffers[i].length)) {
+		if (munmap(buffers[i].start, buffers[i].length) == -1) {
 			ERROR("munmap");
 			return 1;
 		}
@@ -131,7 +131,7 @@ static inline uint8_t init_mmap(const char* dev_name) {
 	req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	req.memory = V4L2_MEMORY_MMAP;
 
-	if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
+	if (xioctl(fd, VIDIOC_REQBUFS, &req) == -1) {
 		if (EINVAL == errno) {
 			ERROR("%s does not support memory mapping\n", dev_name);
 			return 1;
@@ -190,7 +190,7 @@ static uint8_t init_device(const char* dev_name, uint16_t w, uint16_t h) {
 	struct v4l2_format fmt;
 	unsigned int min;
 
-	if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
+	if (xioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
 		if (EINVAL == errno)
 			ERROR("%s is not a V4L2 device.\n", dev_name);
 		else
@@ -257,7 +257,7 @@ static uint8_t init_device(const char* dev_name, uint16_t w, uint16_t h) {
 static inline uint8_t open_device(const char* dev_name) {
 	struct stat st;
 
-	if (-1 == stat(dev_name, &st)) {
+	if (stat(dev_name, &st) == -1) {
 		ERROR("Cannot identify '%s': %d, %s\n",
 			dev_name, errno, strerror(errno));
 		return 1;
@@ -270,7 +270,7 @@ static inline uint8_t open_device(const char* dev_name) {
 
 	fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 
-	if (-1 == fd) {
+	if (fd == -1) {
 		ERROR("Cannot open '%s': %d, %s\n",
 			 dev_name, errno, strerror(errno));
 		return 1;
@@ -278,15 +278,6 @@ static inline uint8_t open_device(const char* dev_name) {
 	return 0;
 }
 
-/**
- * Initialize a camera.
- * @param camera: Pointer to uninitialized camera object.
- * @param id: The id of the camera ( Try 0 to start ).
- * @param w, h: The dimensions of the image to get.
- * @param output: A pointer to recieve data.
- * @returns NULL: If nothing went wrong.
- * @returns: Error message if something went wrong.
-**/
 const char* car_camera_init(car_camera_t* camera, uint16_t id,
 	uint16_t w, uint16_t h, void* output)
 {
@@ -316,7 +307,7 @@ const char* car_camera_loop(car_camera_t* camera) {
 
 		r = select(fd + 1, &fds, NULL, NULL, &tv);
 
-		if (-1 == r) {
+		if (r == -1) {
 			if (EINTR == errno)
 				continue;
 
