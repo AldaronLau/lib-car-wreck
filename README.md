@@ -38,7 +38,7 @@ will be one.  And the more cameras you plug in just keep adding to the variable
 to use them.
 
 "w" and "h" are the width and height of the image you want to recieve, and
-output is where you want to receive the data.  The size is assumed to be w*h*3.
+output is where you want to receive the data.  The size is assumed to be w * h * 3.
 3 for Red, Green, and Blue.
 
 ## Cross-Platform
