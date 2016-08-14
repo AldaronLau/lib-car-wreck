@@ -7,31 +7,30 @@ A portable library for capture video and audio.
 
 There are only three functions in this library:
 
-	```
-		const char* car_camera_init(car_camera_t* camera, uint16_t id,
-			uint16_t w, uint16_t h, void* output);
-	```
+```
+const char* car_camera_init(car_camera_t* camera, uint16_t id, uint16_t w, uint16_t h, void* output);
+```
 
-	```
-		const char* car_camera_loop(car_camera_t* camera);
-	```
+```
+const char* car_camera_loop(car_camera_t* camera);
+```
 
-	```
-		const char* car_camera_kill(car_camera_t* camera);
-	```
+```
+const char* car_camera_kill(car_camera_t* camera);
+```
 
 The return value for all of these is NULL, unless there is an error: then a
 string explaining the error is returned.
 
 The 1st parameter is an object that represents a camera.  Just do a:
-	```
-		car_camera_t camera;
-	```
+```
+	car_camera_t camera;
+```
 
 And pass a:
-	```
-		&camera
-	```
+```
+	&camera
+```
 Into all of the functions
 
 For most cases "id" will be zero.  If you have plugged in an extra webcam "id"
