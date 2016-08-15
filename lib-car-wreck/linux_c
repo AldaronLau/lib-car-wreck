@@ -63,7 +63,8 @@ static inline uint8_t read_frame(void* output) {
 		return 2;
 	}
 
-	memcpy(output, buffers[buf.index].start, buf.bytesused);
+//	memcpy(output, buffers[buf.index].start, buf.bytesused);
+	printf("used %d bytes!\n", buf.bytesused);
 
 	if (xioctl(fd, VIDIOC_QBUF, &buf) == -1) {
 		ERROR("VIDIOC_QBUF");
@@ -183,12 +184,12 @@ static inline uint8_t init_mmap(const char* dev_name) {
 	return 0;
 }
 
-static uint8_t init_device(const char* dev_name, uint16_t w, uint16_t h) {
+static uint8_t init_device(const char* dev_name, uint16_t* w, uint16_t* h) {
 	struct v4l2_capability cap;
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
 	struct v4l2_format fmt;
-	unsigned int min;
+//	unsigned int min;
 
 	if (xioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
 		if (EINVAL == errno)
@@ -224,10 +225,10 @@ static uint8_t init_device(const char* dev_name, uint16_t w, uint16_t h) {
 
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if (w && h) {
-		fmt.fmt.pix.width       = w;
-		fmt.fmt.pix.height      = h;
-		fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-		fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+		fmt.fmt.pix.width       = *w;
+		fmt.fmt.pix.height      = *h;
+		fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_RGB32;
+		fmt.fmt.pix.field       = V4L2_FIELD_NONE;
 
 		if (xioctl(fd, VIDIOC_S_FMT, &fmt) == -1) {
 			ERROR("VIDIOC_S_FMT");
@@ -244,12 +245,15 @@ static uint8_t init_device(const char* dev_name, uint16_t w, uint16_t h) {
 	}
 
 	/* Buggy driver paranoia. */
-	min = fmt.fmt.pix.width * 2;
-	if (fmt.fmt.pix.bytesperline < min)
-		fmt.fmt.pix.bytesperline = min;
-	min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-	if (fmt.fmt.pix.sizeimage < min)
-		fmt.fmt.pix.sizeimage = min;
+//	min = fmt.fmt.pix.width * 3;
+//	if (fmt.fmt.pix.bytesperline < min)
+//		fmt.fmt.pix.bytesperline = min;
+//	min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+//	if (fmt.fmt.pix.sizeimage < min)
+//		fmt.fmt.pix.sizeimage = min;
+
+	*w = fmt.fmt.pix.width;
+	*h = fmt.fmt.pix.height;
 
 	return init_mmap(dev_name);
 }
@@ -279,15 +283,16 @@ static inline uint8_t open_device(const char* dev_name) {
 }
 
 const char* car_camera_init(car_camera_t* camera, uint16_t id,
-	uint16_t w, uint16_t h, void* output)
+	uint16_t w, uint16_t h, void** output)
 {
 	sprintf(camera->dev_name, "/dev/video%d", id);
-	camera->w = w;
-	camera->h = h;
-	camera->output = output;
+//	camera->w = w;
+//	camera->h = h;
+//	camera->output = output;
 
 	if(open_device(camera->dev_name)) return car_error;
-	if(init_device(camera->dev_name, camera->w, camera->h))return car_error;
+	if(init_device(camera->dev_name, &w, &h))
+		return car_error;
 	if(start_capturing()) return car_error;
 	return NULL;
 }
@@ -320,7 +325,7 @@ const char* car_camera_loop(car_camera_t* camera) {
 			return car_error;
 		}
 
-		switch (read_frame(camera->output)) {
+		switch (read_frame(NULL)) {
 			case 1: return NULL;
 			case 2: return car_error;
 			default: break;
