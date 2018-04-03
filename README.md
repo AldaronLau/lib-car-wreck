@@ -1,5 +1,5 @@
 # lib-car-wreck
-A portable library for capture video and audio.
+A platform-agnostic library for capturing video and audio.
 
 # Why use lib-car-wreck?
 
